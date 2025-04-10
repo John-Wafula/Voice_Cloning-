@@ -1,0 +1,15 @@
+streamlit==1.32.0
+openai==1.12.0
+python-dotenv==1.0.1
+sounddevice==0.4.6
+soundfile==0.12.1
+numpy==1.26.4
+scipy==1.12.0
+requests==2.31.0
+gTTS==2.5.1
+langchain-groq
+transformers
+torch
+torchaudio
+uuid
+pydub==0.25.1 
