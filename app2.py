@@ -7,11 +7,14 @@ import tempfile
 import os
 import requests
 import base64
+import shutil
 from io import BytesIO
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
+if not os.path.exists("media/audio"):
+    os.makedirs("media/audio", exist_ok=True)
 
 # Configure OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -90,6 +93,16 @@ def text_to_speech_with_speechify(text, voice_id="dc1f0dc1-ff98-4086-8687-40c0bb
         st.error(traceback.format_exc())
         return None, None
 
+# Function to create auto-playing audio HTML
+def create_auto_play_audio(audio_data, audio_format):
+    audio_base64 = base64.b64encode(audio_data).decode('utf-8')
+    audio_html = f"""
+        <audio autoplay controls style="display: none;">
+            <source src="data:audio/{audio_format};base64,{audio_base64}" type="audio/{audio_format}">
+        </audio>
+    """
+    return audio_html
+
 # Streamlit UI
 st.title("Voice-Enabled AI Chatbot with Speechify")
 st.write("Chat with AI using text or voice!")
@@ -118,7 +131,7 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.write(message["content"])
         if "audio_data" in message and message["audio_data"] is not None:
-            st.audio(message["audio_data"], format=message["audio_format"])
+            st.markdown(create_auto_play_audio(message["audio_data"], message["audio_format"]), unsafe_allow_html=True)
 
 # Chat input
 if prompt := st.chat_input("Type your message here..."):
@@ -141,7 +154,7 @@ if prompt := st.chat_input("Type your message here..."):
         # Convert response to speech
         audio_data, audio_format = text_to_speech_with_speechify(response_text, voice_id)
         if audio_data:
-            st.audio(audio_data, format=audio_format)
+            st.markdown(create_auto_play_audio(audio_data, audio_format), unsafe_allow_html=True)
             st.session_state.messages.append({
                 "role": "assistant",
                 "content": response_text,
@@ -180,7 +193,7 @@ if st.button("🎤 Record Voice Input"):
                 # Convert response to speech
                 audio_data, audio_format = text_to_speech_with_speechify(response_text, voice_id)
                 if audio_data:
-                    st.audio(audio_data, format=audio_format)
+                    st.markdown(create_auto_play_audio(audio_data, audio_format), unsafe_allow_html=True)
                     st.session_state.messages.append({
                         "role": "assistant",
                         "content": response_text,
